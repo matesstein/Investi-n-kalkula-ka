@@ -1,0 +1,1952 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Investiční kalkulačka</title>
+    <style>
+      :root {
+        --bg: #eefafb;
+        --panel: #ffffff;
+        --text: #15424b;
+        --muted: #4f7d86;
+        --line: #bfe4eb;
+        --accent: #5AB5C8;
+        --accent-2: #3e96a8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at top right, #d8f0f4 0%, var(--bg) 55%);
+      }
+
+      .wrap {
+        max-width: 1150px;
+        margin: 0 auto;
+        padding: 24px 16px 32px;
+      }
+
+      .brand-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .brand-logo {
+        height: 84px;
+        width: auto;
+        display: block;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+      }
+
+      .flow-nav {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .flow-step {
+        text-align: left;
+        border: 1px solid var(--line);
+        background: #f4fbfc;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+
+      .flow-step.nowrap {
+        white-space: nowrap;
+      }
+
+      .flow-step .n {
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 22px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: #d8eef3;
+        color: #2f7f8f;
+        margin-right: 8px;
+      }
+
+      .flow-step.active {
+        background: linear-gradient(180deg, var(--accent), var(--accent-2));
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .flow-step.active .n {
+        background: rgba(255, 255, 255, 0.22);
+        color: #fff;
+      }
+
+      .calc-mode {
+        display: none;
+      }
+
+      .calc-mode.active {
+        display: block;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      @media (min-width: 920px) {
+        .grid {
+          grid-template-columns: 360px 1fr;
+          align-items: start;
+        }
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+      }
+
+      .form-row {
+        margin-bottom: 12px;
+      }
+
+      .slider-row {
+        margin-top: 8px;
+      }
+
+      .slider-row input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        padding: 0;
+        height: 6px;
+        border-radius: 999px;
+        border: 0;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        outline: none;
+      }
+
+      .slider-row input[type="range"]::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+
+      .slider-row input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        margin-top: -6px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        background: #2f8fa1;
+        box-shadow: 0 0 0 2px rgba(90, 181, 200, 0.28);
+        cursor: pointer;
+      }
+
+      .slider-row input[type="range"]::-moz-range-track {
+        height: 6px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+
+      .slider-row input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        background: #2f8fa1;
+        box-shadow: 0 0 0 2px rgba(90, 181, 200, 0.28);
+        cursor: pointer;
+      }
+
+      .slider-row input[type="range"]:focus-visible::-webkit-slider-thumb {
+        box-shadow: 0 0 0 2px rgba(90, 181, 200, 0.28), 0 0 0 5px rgba(90, 181, 200, 0.2);
+      }
+
+      .slider-row input[type="range"]:focus-visible::-moz-range-thumb {
+        box-shadow: 0 0 0 2px rgba(90, 181, 200, 0.28), 0 0 0 5px rgba(90, 181, 200, 0.2);
+      }
+
+      .form-row.inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .form-row.inline input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+      }
+
+      .form-row.inline label {
+        margin: 0;
+        display: inline;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      input,
+      select,
+      button {
+        width: 100%;
+        border: 1px solid #b7dbe2;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+      }
+
+      button {
+        background: linear-gradient(180deg, var(--accent), var(--accent-2));
+        color: #fff;
+        border: 0;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button:hover {
+        filter: brightness(1.05);
+      }
+
+      .summary {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      }
+
+      .summary-item {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #f4fbfc;
+      }
+
+      .summary-item .k {
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .summary-item .v {
+        margin-top: 4px;
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+
+      .insight {
+        margin-top: 12px;
+        border: 1px solid #b7dbe2;
+        border-radius: 10px;
+        background: #edf8fa;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        margin-top: 16px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: right;
+        font-size: 0.84rem;
+      }
+
+      th:first-child,
+      td:first-child {
+        text-align: left;
+      }
+
+      th {
+        white-space: normal;
+      }
+
+      td {
+        white-space: nowrap;
+      }
+
+      .chart {
+        margin-top: 16px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 12px;
+      }
+
+      .chart-area {
+        position: relative;
+      }
+
+      .chart svg {
+        display: block;
+        width: 100%;
+        height: 300px;
+      }
+
+      .chart-tooltip {
+        position: absolute;
+        pointer-events: none;
+        min-width: 180px;
+        background: rgba(18, 69, 78, 0.95);
+        color: #fff;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+        line-height: 1.35;
+        transform: translate(-50%, -110%);
+        opacity: 0;
+        transition: opacity 120ms ease;
+      }
+
+      .legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+        font-size: 0.84rem;
+        color: var(--muted);
+      }
+
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .swatch {
+        width: 14px;
+        height: 10px;
+        border-radius: 2px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .advanced-options {
+        margin: 10px 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: #f4fbfc;
+      }
+
+      .advanced-options summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .mobile-cards {
+        display: none;
+        margin-top: 12px;
+        gap: 10px;
+      }
+
+      .mobile-row {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #f4fbfc;
+        padding: 10px;
+      }
+
+      .mobile-row h4 {
+        margin: 0 0 8px;
+        font-size: 0.9rem;
+      }
+
+      .mobile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 10px;
+      }
+
+      .mobile-k {
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+
+      .mobile-v {
+        font-size: 0.83rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 919px) {
+        .brand-header {
+          align-items: flex-start;
+        }
+
+        .brand-logo {
+          height: 72px;
+        }
+
+        .flow-nav {
+          grid-template-columns: 1fr;
+        }
+
+        .wrap {
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+
+        .card {
+          padding: 12px;
+        }
+
+        th,
+        td {
+          padding: 8px 6px;
+          font-size: 0.76rem;
+        }
+
+        .summary {
+          grid-template-columns: 1fr;
+        }
+
+        .table-wrap {
+          display: none;
+        }
+
+        .mobile-cards {
+          display: grid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="brand-header">
+        <h1>Investiční kalkulačka</h1>
+        <img class="brand-logo" src="logo.png" alt="Novák & Stěrba financial services" />
+      </div>
+      <div class="flow-nav">
+        <button type="button" class="flow-step active" data-flow-mode="simple"><span class="n">1</span>Chci spočítat hodnotu investice</button>
+        <button type="button" class="flow-step nowrap" data-flow-mode="goal"><span class="n">2</span>Mám cíl: kolik dávat stranou?</button>
+        <button type="button" class="flow-step" data-flow-mode="advanced"><span class="n">3</span>Splacení hypotéky vs. investice</button>
+      </div>
+
+      <div id="mode-simple" class="calc-mode active">
+        <div class="grid">
+          <section class="card">
+            <form id="simple-form">
+              <div class="form-row">
+                <label for="simple-type">Typ investice</label>
+                <select id="simple-type" required>
+                  <option value="monthly">Měsíční investice</option>
+                  <option value="lumpSum">Jednorázová investice</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label for="simple-amount">Výše investice (Kč)</label>
+                <input id="simple-amount" type="text" inputmode="numeric" value="5000" required />
+                <div id="simple-amount-range-wrap" class="slider-row">
+                  <input id="simple-amount-range" type="range" min="1000" max="25000" step="1000" value="5000" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="simple-returnRate">Očekávaný výnos (% p.a.)</label>
+                <input id="simple-returnRate" type="number" min="0" max="20" step="0.1" value="7" required />
+                <div class="slider-row">
+                  <input id="simple-returnRate-range" type="range" min="0" max="20" step="0.5" value="7" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="simple-years">Doba investice (roky)</label>
+                <input id="simple-years" type="number" min="1" max="30" step="1" value="20" required />
+                <div class="slider-row">
+                  <input id="simple-years-range" type="range" min="1" max="30" step="1" value="20" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="simple-fee">Poplatek (% z každé investice)</label>
+                <input id="simple-fee" type="number" min="0" max="3" step="0.1" value="3" required />
+                <div class="slider-row">
+                  <input id="simple-fee-range" type="range" min="0" max="3" step="0.5" value="3" />
+                </div>
+              </div>
+
+              <div class="form-row inline">
+                <input id="simple-compareSavings" type="checkbox" />
+                <label for="simple-compareSavings">Porovnat se spořicím účtem</label>
+              </div>
+
+              <div id="simple-savings-wrap" class="form-row hidden">
+                <label for="simple-savingsRate">Spořicí účet - úroková sazba (% p.a.)</label>
+                <input id="simple-savingsRate" type="number" min="0" max="5" step="0.1" value="3" />
+                <div class="slider-row">
+                  <input id="simple-savingsRate-range" type="range" min="0" max="5" step="0.5" value="3" />
+                </div>
+              </div>
+
+              <div class="form-row inline">
+                <input id="simple-compareInflation" type="checkbox" />
+                <label for="simple-compareInflation">Inflace</label>
+              </div>
+
+              <div id="simple-inflation-wrap" class="form-row hidden">
+                <label for="simple-inflationRate">Inflace (% p.a.)</label>
+                <input id="simple-inflationRate" type="number" min="0" max="10" step="0.1" value="2.5" />
+                <div class="slider-row">
+                  <input id="simple-inflationRate-range" type="range" min="0" max="10" step="0.5" value="2.5" />
+                </div>
+              </div>
+
+              <button type="submit">Spočítat</button>
+              <p class="muted">Výpočet je orientační a předpokládá rovnoměrné zhodnocení.</p>
+            </form>
+          </section>
+
+          <section class="card">
+            <div class="summary" id="simple-summary"></div>
+            <div class="insight" id="simple-insight"></div>
+
+            <div class="chart">
+              <div class="chart-area">
+                <svg id="simple-chart" viewBox="0 0 900 300" preserveAspectRatio="none"></svg>
+                <div id="simple-tooltip" class="chart-tooltip"></div>
+              </div>
+              <div class="legend">
+                <span><i class="swatch" style="background:#d9f1f5"></i>Vlastní vklady</span>
+                <span><i class="swatch" style="background:#5ab5c8"></i>Zhodnocení</span>
+                <span id="simple-saving-legend" class="hidden"><i class="swatch" style="background:#d73a3a"></i>Spořicí účet</span>
+                <span id="simple-real-legend" class="hidden"><i class="swatch" style="background:#2f9e44"></i>Reálná hodnota (po inflaci)</span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rok</th>
+                    <th>Vloženo v roce</th>
+                    <th>Poplatky v roce</th>
+                    <th>Hodnota portfolia</th>
+                    <th>Zhodnocení</th>
+                    <th id="simple-saving-head" class="hidden">Spořicí účet</th>
+                    <th id="simple-saving-diff-head" class="hidden">Rozdíl (investice - spoření)</th>
+                  </tr>
+                </thead>
+                <tbody id="simple-rows"></tbody>
+              </table>
+            </div>
+            <div id="simple-cards" class="mobile-cards"></div>
+          </section>
+        </div>
+      </div>
+
+      <div id="mode-advanced" class="calc-mode">
+        <div class="grid">
+          <section class="card">
+            <form id="advanced-form">
+              <div class="form-row">
+                <label for="adv-principal">Zbývající dlužná částka hypotéky (Kč)</label>
+                <input id="adv-principal" type="text" inputmode="numeric" value="3000000" required />
+                <div class="slider-row">
+                  <input id="adv-principal-range" type="range" min="0" max="10000000" step="100000" value="3000000" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="adv-mortgageRate">Úroková sazba hypotéky (% p.a.)</label>
+                <input id="adv-mortgageRate" type="number" min="0" max="7" step="0.1" value="4.5" required />
+                <div class="slider-row">
+                  <input id="adv-mortgageRate-range" type="range" min="0" max="7" step="0.1" value="4.5" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="adv-years">Doba do konce hypotéky (roky)</label>
+                <input id="adv-years" type="number" min="1" max="30" step="1" value="20" required />
+                <div class="slider-row">
+                  <input id="adv-years-range" type="range" min="1" max="30" step="1" value="20" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="adv-lumpSum">Jednorázová částka (investice nebo mimořádná splátka) (Kč)</label>
+                <input id="adv-lumpSum" type="text" inputmode="numeric" value="1000000" required />
+                <div class="slider-row">
+                  <input id="adv-lumpSum-range" type="range" min="0" max="5000000" step="100000" value="1000000" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="adv-returnRate">Očekávaný výnos investice (% p.a.)</label>
+                <input id="adv-returnRate" type="number" step="0.1" value="7" required />
+                <div class="slider-row">
+                  <input id="adv-returnRate-range" type="range" min="0" max="20" step="0.5" value="7" />
+                </div>
+              </div>
+
+              <div class="form-row inline">
+                <input id="adv-showPrepayMortgage" type="checkbox" />
+                <label for="adv-showPrepayMortgage">Ukázat hypotéku po mimořádné splátce</label>
+              </div>
+
+              <div class="form-row">
+                <label for="adv-prepayMode">Po mimořádné splátce hypotéky</label>
+                <select id="adv-prepayMode" required>
+                  <option value="shortenTerm">zachovat splátku a zkrátit dobu</option>
+                  <option value="lowerPayment">zachovat dobu a snížit splátku</option>
+                </select>
+              </div>
+
+              <details class="advanced-options">
+                <summary>Rozšířené nastavení</summary>
+                <div class="form-row" style="margin-top:10px">
+                  <label for="adv-fee">Poplatek (% z každé investice)</label>
+                  <input id="adv-fee" type="number" min="0" max="3" step="0.1" value="3" required />
+                  <div class="slider-row">
+                    <input id="adv-fee-range" type="range" min="0" max="3" step="0.5" value="3" />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <label for="adv-monthlyInvest">Pravidelná měsíční investice během splácení (Kč, volitelné)</label>
+                  <input id="adv-monthlyInvest" type="text" inputmode="numeric" value="0" />
+                  <div class="slider-row">
+                    <input id="adv-monthlyInvest-range" type="range" min="0" max="50000" step="1000" value="0" />
+                  </div>
+                </div>
+              </details>
+
+              <button type="submit">Porovnat</button>
+              <p class="muted">
+                Varianta A použije jednorázovou částku na okamžité umoření hypotéky.
+                Varianta B investuje stejnou částku a hypotéku splácí dle standardní splátky.
+                Po doplacení hypotéky se v obou variantách investuje i uvolněná splátka.
+                Při režimu "snížit splátku" se měsíční úspora proti původní splátce automaticky investuje.
+              </p>
+            </form>
+          </section>
+
+          <section class="card">
+            <div class="summary" id="advanced-summary"></div>
+            <div class="insight" id="advanced-insight"></div>
+
+            <div class="chart">
+              <div class="chart-area">
+                <svg id="advanced-chart" viewBox="0 0 900 300" preserveAspectRatio="none"></svg>
+                <div id="advanced-tooltip" class="chart-tooltip"></div>
+              </div>
+              <div class="legend">
+                <span><i class="swatch" style="background:#2f8fa1"></i>Hodnota investice (investiční varianta)</span>
+                <span><i class="swatch" style="background:#79bcc8"></i>Zůstatek hypotéky (investiční varianta)</span>
+                <span id="adv-prepay-legend" class="hidden"><i class="swatch" style="background:#d73a3a"></i>Zůstatek hypotéky (mimořádná splátka)</span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rok</th>
+                    <th>Čistá pozice (umoření)</th>
+                    <th>Čistá pozice (investice)</th>
+                    <th>Rozdíl</th>
+                  </tr>
+                </thead>
+                <tbody id="advanced-rows"></tbody>
+              </table>
+            </div>
+            <div id="advanced-cards" class="mobile-cards"></div>
+          </section>
+        </div>
+      </div>
+
+      <div id="mode-goal" class="calc-mode">
+        <div class="grid">
+          <section class="card">
+            <form id="goal-form">
+              <div class="form-row">
+                <label for="goal-target">Cílová částka v dnešních cenách (Kč)</label>
+                <input id="goal-target" type="text" inputmode="numeric" value="1000000" required />
+                <div class="slider-row">
+                  <input id="goal-target-range" type="range" min="100000" max="10000000" step="100000" value="1000000" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="goal-years">Za jak dlouho peníze potřebuji (roky)</label>
+                <input id="goal-years" type="number" min="1" max="30" step="1" value="20" required />
+                <div class="slider-row">
+                  <input id="goal-years-range" type="range" min="1" max="30" step="1" value="20" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="goal-returnRate">Očekávané zhodnocení (% p.a.)</label>
+                <input id="goal-returnRate" type="number" min="0" max="20" step="0.1" value="7" required />
+                <div class="slider-row">
+                  <input id="goal-returnRate-range" type="range" min="0" max="20" step="0.5" value="7" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="goal-initial">Počáteční jednorázový vklad (Kč, volitelné)</label>
+                <input id="goal-initial" type="text" inputmode="numeric" value="0" />
+                <div class="slider-row">
+                  <input id="goal-initial-range" type="range" min="0" max="2000000" step="50000" value="0" />
+                </div>
+              </div>
+
+              <div class="form-row inline">
+                <input id="goal-useInflation" type="checkbox" />
+                <label for="goal-useInflation">Inflace</label>
+              </div>
+
+              <div id="goal-inflation-wrap" class="form-row hidden">
+                <label for="goal-inflationRate">Inflace (% p.a.)</label>
+                <input id="goal-inflationRate" type="number" min="0" max="10" step="0.1" value="2.5" />
+                <div class="slider-row">
+                  <input id="goal-inflationRate-range" type="range" min="0" max="10" step="0.5" value="2.5" />
+                </div>
+              </div>
+
+              <button type="submit">Spočítat</button>
+              <p class="muted">
+                Výpočet ukazuje, kolik je potřeba pravidelně investovat pro dosažení cíle.
+                Automaticky je započten poplatek 3 % z každé pravidelné i jednorázové investice.
+              </p>
+            </form>
+          </section>
+
+          <section class="card">
+            <div class="summary" id="goal-summary"></div>
+
+            <div class="chart">
+              <div class="chart-area">
+                <svg id="goal-chart" viewBox="0 0 900 300" preserveAspectRatio="none"></svg>
+                <div id="goal-tooltip" class="chart-tooltip"></div>
+              </div>
+              <div class="legend">
+                <span><i class="swatch" style="background:#2f8fa1"></i>Očekávaná hodnota portfolia</span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rok</th>
+                    <th>Potřebná částka k cíli</th>
+                    <th>Hodnota portfolia</th>
+                    <th>Hodnota zhodnocení</th>
+                    <th>Plnění cíle</th>
+                  </tr>
+                </thead>
+                <tbody id="goal-rows"></tbody>
+              </table>
+            </div>
+            <div id="goal-cards" class="mobile-cards"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const money = (n) =>
+        new Intl.NumberFormat("cs-CZ", {
+          style: "currency",
+          currency: "CZK",
+          maximumFractionDigits: 0
+        }).format(n);
+
+      const pct = (n) =>
+        `${new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 2 }).format(n)} %`;
+
+      const roundToHundredThousands = (n) => Math.round(n / 100000) * 100000;
+
+      const parseAmount = (value) => {
+        const digits = String(value).replace(/\D/g, "");
+        return digits ? Number(digits) : 0;
+      };
+
+      const formatAmount = (value, keepZero = false) => {
+        const parsed = parseAmount(value);
+        if (!parsed) return keepZero ? "0" : "";
+        return parsed.toLocaleString("cs-CZ");
+      };
+
+      function bindAmountFormatting(input, keepZero = false) {
+        input.addEventListener("input", () => {
+          input.value = formatAmount(input.value, keepZero);
+        });
+        input.value = formatAmount(input.value, keepZero);
+      }
+
+      function setupModeSwitch() {
+        const flowButtons = Array.from(document.querySelectorAll("[data-flow-mode]"));
+        const panels = {
+          simple: document.getElementById("mode-simple"),
+          advanced: document.getElementById("mode-advanced"),
+          goal: document.getElementById("mode-goal")
+        };
+
+        const setMode = (mode) => {
+          Object.entries(panels).forEach(([key, panel]) => {
+            panel.classList.toggle("active", key === mode);
+          });
+          flowButtons.forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.flowMode === mode);
+          });
+        };
+
+        flowButtons.forEach((btn) => {
+          btn.addEventListener("click", () => setMode(btn.dataset.flowMode));
+        });
+      }
+
+      function annuityPayment(principal, monthlyRate, months) {
+        if (months <= 0) return 0;
+        if (monthlyRate === 0) return principal / months;
+        return (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
+      }
+
+      function drawLineChart({
+        svg,
+        data,
+        lines,
+        tooltipEl,
+        formatter,
+        footerLabel,
+        yAxisLabel
+      }) {
+        const width = 900;
+        const height = 300;
+        const pad = { top: 20, right: 20, bottom: 44, left: 56 };
+        const innerW = width - pad.left - pad.right;
+        const innerH = height - pad.top - pad.bottom;
+
+        let minY = 0;
+        let maxY = 1;
+        data.forEach((row) => {
+          lines.forEach((line) => {
+            const v = row[line.key];
+            minY = Math.min(minY, v);
+            maxY = Math.max(maxY, v);
+          });
+        });
+        if (minY === maxY) maxY = minY + 1;
+
+        const x = (i) => pad.left + (i / (data.length - 1 || 1)) * innerW;
+        const y = (v) => {
+          const ratio = (v - minY) / (maxY - minY);
+          return pad.top + (1 - ratio) * innerH;
+        };
+
+        const zeroY = y(0);
+        const gridLines = 6;
+        let grid = "";
+        for (let i = 0; i <= gridLines; i++) {
+          const value = minY + ((maxY - minY) / gridLines) * i;
+          const yy = y(value);
+          grid += `<line x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}" stroke="#d9ecf0" />`;
+          grid += `<text x="${pad.left - 8}" y="${yy + 4}" font-size="11" fill="#4f7d86" text-anchor="end">${roundToHundredThousands(
+            value
+          ).toLocaleString("cs-CZ")}</text>`;
+        }
+
+        const seriesSvg = lines
+          .map((line) => {
+            const points = data.map((row, i) => `${x(i)},${y(row[line.key])}`).join(" ");
+            return `<polyline fill="none" stroke="${line.color}" stroke-width="${line.width || 3}" points="${points}" />`;
+          })
+          .join("");
+
+        const xLabels = data
+          .map(
+            (row, i) => `
+            <line x1="${x(i)}" y1="${height - pad.bottom}" x2="${x(i)}" y2="${height - pad.bottom + 4}" stroke="#9dc7cf" />
+            <text x="${x(i)}" y="${height - 10}" font-size="10" fill="#4f7d86" text-anchor="middle">${row.year}</text>`
+          )
+          .join("");
+
+        const zeroAxis =
+          minY < 0
+            ? `<line x1="${pad.left}" y1="${zeroY}" x2="${width - pad.right}" y2="${zeroY}" stroke="#b7dbe2" stroke-dasharray="4 4" />`
+            : "";
+
+        svg.innerHTML = `
+          ${grid}
+          ${zeroAxis}
+          <line x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}" stroke="#9dc7cf" />
+          ${xLabels}
+          ${seriesSvg}
+          <line id="hover-line" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - 8}" stroke="#4f7d86" stroke-width="1.5" stroke-dasharray="4 4" opacity="0" />
+          <text x="${width - pad.right}" y="${pad.top}" text-anchor="end" font-size="12" fill="#2f6f7d">${yAxisLabel}</text>
+        `;
+
+        const hoverLine = svg.querySelector("#hover-line");
+
+        const showTooltip = (event) => {
+          if (!data.length) return;
+          const rect = svg.getBoundingClientRect();
+          const xPos = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+          const idx = Math.round((xPos / rect.width) * (data.length - 1));
+          const row = data[idx];
+          const snappedX = x(idx);
+          tooltipEl.style.opacity = "1";
+          tooltipEl.style.left = `${snappedX}px`;
+          tooltipEl.style.top = `${event.clientY - rect.top}px`;
+          tooltipEl.innerHTML = formatter(row);
+          if (hoverLine) {
+            hoverLine.setAttribute("x1", String(snappedX));
+            hoverLine.setAttribute("x2", String(snappedX));
+            hoverLine.setAttribute("opacity", "1");
+          }
+        };
+
+        const hideTooltip = () => {
+          tooltipEl.style.opacity = "0";
+          if (hoverLine) hoverLine.setAttribute("opacity", "0");
+        };
+
+        svg.onmousemove = showTooltip;
+        svg.onmouseleave = hideTooltip;
+        svg.ontouchmove = (e) => {
+          if (e.touches && e.touches[0]) showTooltip(e.touches[0]);
+        };
+        svg.ontouchend = hideTooltip;
+      }
+
+      function calculateSimple({
+        type,
+        amount,
+        feePct,
+        returnRate,
+        years,
+        compareSavings,
+        savingsRate,
+        compareInflation,
+        inflationRate
+      }) {
+        const monthlyRate = Math.pow(1 + returnRate / 100, 1 / 12) - 1;
+        const savingsMonthlyRate = savingsRate / 100 / 12;
+        const savingsTaxRate = 0.15;
+        const inflationMonthlyRate = Math.pow(1 + inflationRate / 100, 1 / 12) - 1;
+        const feeRate = feePct / 100;
+        const data = [];
+        let portfolio = 0;
+        let savings = 0;
+        let contributed = 0;
+        let fees = 0;
+        let inflationIndex = 1;
+
+        // Poplatek platí pouze investice, spořicí účet používá plný vklad.
+        const applyInvestmentDeposit = () => {
+          const fee = amount * feeRate;
+          const net = amount - fee;
+          contributed += amount;
+          fees += fee;
+          portfolio += net;
+          return { fee };
+        };
+
+        const applySavingsDeposit = () => {
+          if (compareSavings) savings += amount;
+        };
+
+        let annualContribution = 0;
+        let annualFees = 0;
+
+        for (let month = 1; month <= years * 12; month++) {
+          const shouldDeposit = type === "monthly" || (type === "lumpSum" && month === 1);
+          if (shouldDeposit) {
+            const { fee } = applyInvestmentDeposit();
+            annualContribution += amount;
+            annualFees += fee;
+            applySavingsDeposit();
+          }
+
+          portfolio *= 1 + monthlyRate;
+
+          if (compareSavings) {
+            const grossInterest = savings * savingsMonthlyRate;
+            const withholdingTax = Math.max(0, grossInterest) * savingsTaxRate;
+            savings += grossInterest - withholdingTax;
+          }
+
+          if (compareInflation) inflationIndex *= 1 + inflationMonthlyRate;
+
+          if (month % 12 === 0) {
+            const year = month / 12;
+            const gain = portfolio - contributed;
+            const savingsGain = compareSavings ? savings - contributed : 0;
+            const investVsSavingsDiff = compareSavings ? portfolio - savings : 0;
+            const realPortfolio = compareInflation ? portfolio / inflationIndex : null;
+            const realSavings = compareInflation && compareSavings ? savings / inflationIndex : null;
+            data.push({
+              year,
+              annualContribution,
+              annualFees,
+              contributed,
+              fees,
+              portfolio,
+              gain,
+              savings: compareSavings ? savings : null,
+              savingsGain,
+              investVsSavingsDiff,
+              realPortfolio,
+              realSavings
+            });
+
+            annualContribution = 0;
+            annualFees = 0;
+          }
+        }
+
+        return data;
+      }
+
+      function setupSimpleCalculator() {
+        const form = document.getElementById("simple-form");
+        const typeInput = document.getElementById("simple-type");
+        const amountInput = document.getElementById("simple-amount");
+        const amountRangeWrap = document.getElementById("simple-amount-range-wrap");
+        const amountRange = document.getElementById("simple-amount-range");
+        const feeInput = document.getElementById("simple-fee");
+        const feeRange = document.getElementById("simple-fee-range");
+        const returnRateInput = document.getElementById("simple-returnRate");
+        const returnRateRange = document.getElementById("simple-returnRate-range");
+        const yearsInput = document.getElementById("simple-years");
+        const yearsRange = document.getElementById("simple-years-range");
+        const compareSavingsInput = document.getElementById("simple-compareSavings");
+        const savingsWrapEl = document.getElementById("simple-savings-wrap");
+        const savingsRateInput = document.getElementById("simple-savingsRate");
+        const savingsRateRange = document.getElementById("simple-savingsRate-range");
+        const savingLegendEl = document.getElementById("simple-saving-legend");
+        const compareInflationInput = document.getElementById("simple-compareInflation");
+        const inflationWrapEl = document.getElementById("simple-inflation-wrap");
+        const inflationRateInput = document.getElementById("simple-inflationRate");
+        const inflationRateRange = document.getElementById("simple-inflationRate-range");
+        const realLegendEl = document.getElementById("simple-real-legend");
+        const savingHeadEl = document.getElementById("simple-saving-head");
+        const savingDiffHeadEl = document.getElementById("simple-saving-diff-head");
+        const rowsEl = document.getElementById("simple-rows");
+        const cardsEl = document.getElementById("simple-cards");
+        const summaryEl = document.getElementById("simple-summary");
+        const insightEl = document.getElementById("simple-insight");
+        const chartEl = document.getElementById("simple-chart");
+        const tooltipEl = document.getElementById("simple-tooltip");
+
+        bindAmountFormatting(amountInput);
+
+        const syncAmountFieldToRange = () => {
+          const value = parseAmount(amountInput.value);
+          const min = Number(amountRange.min);
+          const max = Number(amountRange.max);
+          const fallback = typeInput.value === "lumpSum" ? 0 : 1000;
+          const clamped = Math.max(min, Math.min(max, value || fallback));
+          amountRange.value = String(clamped);
+        };
+
+        const configureAmountRangeByType = () => {
+          if (typeInput.value === "lumpSum") {
+            amountRange.min = "0";
+            amountRange.max = "2000000";
+            amountRange.step = "50000";
+          } else {
+            amountRange.min = "1000";
+            amountRange.max = "25000";
+            amountRange.step = "1000";
+          }
+        };
+
+        const bindNumberRangePair = (input, range, decimals = 1) => {
+          range.addEventListener("input", () => {
+            input.value = Number(range.value).toFixed(decimals).replace(/\.0$/, "");
+            form.dispatchEvent(new Event("submit"));
+          });
+          input.addEventListener("input", () => {
+            const n = Number(input.value);
+            if (!Number.isNaN(n)) {
+              const min = Number(range.min);
+              const max = Number(range.max);
+              const clamped = Math.max(min, Math.min(max, n));
+              range.value = String(clamped);
+            }
+          });
+        };
+
+        bindNumberRangePair(feeInput, feeRange, 1);
+        bindNumberRangePair(returnRateInput, returnRateRange, 1);
+        bindNumberRangePair(yearsInput, yearsRange, 0);
+        bindNumberRangePair(savingsRateInput, savingsRateRange, 1);
+        bindNumberRangePair(inflationRateInput, inflationRateRange, 1);
+
+        amountRange.addEventListener("input", () => {
+          amountInput.value = formatAmount(amountRange.value);
+          form.dispatchEvent(new Event("submit"));
+        });
+        amountInput.addEventListener("input", () => {
+          syncAmountFieldToRange();
+        });
+
+        const applyAmountDefaultByType = () => {
+          const defaultAmount = typeInput.value === "lumpSum" ? 100000 : 5000;
+          configureAmountRangeByType();
+          amountInput.value = formatAmount(String(defaultAmount));
+          amountRangeWrap.classList.remove("hidden");
+          syncAmountFieldToRange();
+        };
+
+        const toggleSimpleSavingsUI = () => {
+          const enabled = compareSavingsInput.checked;
+          savingsWrapEl.classList.toggle("hidden", !enabled);
+          savingLegendEl.classList.toggle("hidden", !enabled);
+          savingHeadEl.classList.toggle("hidden", !enabled);
+          savingDiffHeadEl.classList.toggle("hidden", !enabled);
+        };
+
+        const toggleSimpleInflationUI = () => {
+          const enabled = compareInflationInput.checked;
+          inflationWrapEl.classList.toggle("hidden", !enabled);
+          realLegendEl.classList.toggle("hidden", !enabled);
+        };
+
+        const drawTable = (data) => {
+          const compareSavings = compareSavingsInput.checked;
+          rowsEl.innerHTML = data
+            .map(
+              (r) => `
+              <tr>
+                <td>${r.year}</td>
+                <td>${money(r.annualContribution)}</td>
+                <td>${money(r.annualFees)}</td>
+                <td>${money(r.portfolio)}</td>
+                <td>${money(r.gain)}</td>
+                <td class="${compareSavings ? "" : "hidden"}">${compareSavings ? money(r.savings) : ""}</td>
+                <td class="${compareSavings ? "" : "hidden"}">${compareSavings ? money(r.investVsSavingsDiff) : ""}</td>
+              </tr>`
+            )
+            .join("");
+
+          cardsEl.innerHTML = data
+            .map(
+              (r) => `
+              <article class="mobile-row">
+                <h4>Rok ${r.year}</h4>
+                <div class="mobile-grid">
+                  <div><div class="mobile-k">Vloženo v roce</div><div class="mobile-v">${money(r.annualContribution)}</div></div>
+                  <div><div class="mobile-k">Poplatky v roce</div><div class="mobile-v">${money(r.annualFees)}</div></div>
+                  <div><div class="mobile-k">Hodnota portfolia</div><div class="mobile-v">${money(r.portfolio)}</div></div>
+                  <div><div class="mobile-k">Zhodnocení</div><div class="mobile-v">${money(r.gain)}</div></div>
+                  ${
+                    compareSavings
+                      ? `<div><div class="mobile-k">Spořicí účet</div><div class="mobile-v">${money(r.savings)}</div></div>
+                         <div><div class="mobile-k">Rozdíl (investice - spoření)</div><div class="mobile-v">${money(r.investVsSavingsDiff)}</div></div>`
+                      : ""
+                  }
+                </div>
+              </article>`
+            )
+            .join("");
+        };
+
+        const drawSummary = (data) => {
+          const last = data[data.length - 1];
+          const gainPct = last.contributed > 0 ? (last.gain / last.contributed) * 100 : 0;
+          const compareSavings = compareSavingsInput.checked;
+          const compareInflation = compareInflationInput.checked;
+          summaryEl.innerHTML = `
+            <div class="summary-item"><div class="k">Vloženo celkem</div><div class="v">${money(last.contributed)}</div></div>
+            <div class="summary-item"><div class="k">Hodnota portfolia</div><div class="v">${money(last.portfolio)}</div></div>
+            <div class="summary-item"><div class="k">Celkové zhodnocení</div><div class="v">${money(last.gain)}</div></div>
+            <div class="summary-item"><div class="k">Zhodnocení v %</div><div class="v">${pct(gainPct)}</div></div>
+            ${
+              compareSavings
+                ? `<div class="summary-item"><div class="k">Hodnota na spořicím účtu</div><div class="v">${money(last.savings)}</div></div>
+                   <div class="summary-item"><div class="k">Rozdíl (investice - spoření)</div><div class="v">${money(last.investVsSavingsDiff)}</div></div>`
+                : ""
+            }
+            ${
+              compareInflation
+                ? `<div class="summary-item"><div class="k">Reálná hodnota investic</div><div class="v">${money(last.realPortfolio)}</div></div>
+                   ${
+                     compareSavings
+                       ? `<div class="summary-item"><div class="k">Reálná hodnota spořícího účtu</div><div class="v">${money(last.realSavings)}</div></div>`
+                       : ""
+                   }`
+                : ""
+            }
+          `;
+        };
+
+        const drawInsight = (data, payload) => {
+          const last = data[data.length - 1];
+          const gainPct = last.contributed > 0 ? (last.gain / last.contributed) * 100 : 0;
+          const baseSentence =
+            gainPct >= 0
+              ? `Při zadaných parametrech je celkové zhodnocení ${money(last.gain)} (${pct(gainPct)}).`
+              : `Při zadaných parametrech je výsledek investice záporný a ztráta je ${money(Math.abs(last.gain))} (${pct(gainPct)}).`;
+
+          let compareSentence =
+            "Komentář vychází z očekávaného modelu a nezohledňuje kolísání trhu v jednotlivých letech.";
+          if (payload.compareSavings) {
+            const diff = last.investVsSavingsDiff;
+            compareSentence =
+              diff >= 0
+                ? `Ve srovnání se spořicím účtem vychází investice lépe o ${money(diff)}.`
+                : `Ve srovnání se spořicím účtem vychází investice hůře o ${money(Math.abs(diff))}.`;
+          }
+
+          let inflationSentence = "";
+          if (payload.compareInflation) {
+            const realGap = (last.realPortfolio || 0) - last.contributed;
+            inflationSentence =
+              realGap >= 0
+                ? `Po zohlednění inflace zůstává reálné zhodnocení kladné (${money(realGap)}).`
+                : `Po zohlednění inflace je reálný výsledek záporný (${money(realGap)}).`;
+          } else {
+            inflationSentence = "Pokud chcete vidět kupní sílu výsledku, zapněte inflaci a porovnejte reálné hodnoty.";
+          }
+
+          insightEl.innerHTML = `${baseSentence} ${compareSentence} ${inflationSentence}`;
+        };
+
+        const drawChart = (data) => {
+          const compareSavings = compareSavingsInput.checked;
+          const compareInflation = compareInflationInput.checked;
+          const width = 900;
+          const height = 300;
+          const pad = { top: 20, right: 20, bottom: 44, left: 56 };
+          const innerW = width - pad.left - pad.right;
+          const innerH = height - pad.top - pad.bottom;
+          const maxY = Math.max(
+            ...data.map((d) =>
+              Math.max(d.portfolio, d.contributed, compareSavings ? d.savings : 0, compareInflation ? d.realPortfolio : 0)
+            ),
+            1
+          );
+          const x = (i) => pad.left + (i / (data.length - 1 || 1)) * innerW;
+          const y = (v) => pad.top + (1 - v / maxY) * innerH;
+
+          const portfolioPoints = data.map((d, i) => `${x(i)},${y(d.portfolio)}`).join(" ");
+          const contributedPoints = data.map((d, i) => `${x(i)},${y(d.contributed)}`).join(" ");
+          const savingsPoints = data.map((d, i) => `${x(i)},${y(d.savings || 0)}`).join(" ");
+          const realPoints = data.map((d, i) => `${x(i)},${y(d.realPortfolio || 0)}`).join(" ");
+          const baseAreaPoints = [
+            `${x(0)},${height - pad.bottom}`,
+            ...data.map((d, i) => `${x(i)},${y(d.contributed)}`),
+            `${x(data.length - 1)},${height - pad.bottom}`
+          ].join(" ");
+          const gainAreaPoints = [
+            ...data.map((d, i) => `${x(i)},${y(d.portfolio)}`),
+            ...data
+              .slice()
+              .reverse()
+              .map((d, i) => `${x(data.length - 1 - i)},${y(d.contributed)}`)
+          ].join(" ");
+          const isGain = data[data.length - 1].portfolio >= data[data.length - 1].contributed;
+          const xLabels = data
+            .map(
+              (d, i) => `
+              <line x1="${x(i)}" y1="${height - pad.bottom}" x2="${x(i)}" y2="${height - pad.bottom + 4}" stroke="#9dc7cf" />
+              <text x="${x(i)}" y="${height - 10}" font-size="10" fill="#4f7d86" text-anchor="middle">${d.year}</text>`
+            )
+            .join("");
+
+          const gridLines = 6;
+          let grid = "";
+          for (let i = 0; i <= gridLines; i++) {
+            const value = (maxY / gridLines) * i;
+            const yy = y(value);
+            grid += `<line x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}" stroke="#d9ecf0" />`;
+            grid += `<text x="${pad.left - 8}" y="${yy + 4}" font-size="11" fill="#4f7d86" text-anchor="end">${roundToHundredThousands(
+              value
+            ).toLocaleString("cs-CZ")}</text>`;
+          }
+
+          chartEl.innerHTML = `
+            ${grid}
+            <line x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}" stroke="#9dc7cf" />
+            ${xLabels}
+            <polygon points="${baseAreaPoints}" fill="#d9f1f5" />
+            ${isGain ? `<polygon points="${gainAreaPoints}" fill="#5ab5c8" opacity="0.65" />` : ""}
+            <polyline fill="none" stroke="#4f7d86" stroke-width="2" stroke-dasharray="5 4" points="${contributedPoints}" />
+            <polyline fill="none" stroke="#2f8fa1" stroke-width="3" points="${portfolioPoints}" />
+            ${compareSavings ? `<polyline fill="none" stroke="#d73a3a" stroke-width="3" points="${savingsPoints}" />` : ""}
+            ${compareInflation ? `<polyline fill="none" stroke="#2f9e44" stroke-width="3" stroke-dasharray="7 5" points="${realPoints}" />` : ""}
+            <line id="simple-hover-line" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - 8}" stroke="#4f7d86" stroke-width="1.5" stroke-dasharray="4 4" opacity="0" />
+            <text x="${width - pad.right}" y="${pad.top}" text-anchor="end" font-size="12" fill="#2f6f7d">Hodnota portfolia (Kč)</text>
+          `;
+
+          const hoverLine = chartEl.querySelector("#simple-hover-line");
+
+          const showTooltip = (event) => {
+            const rect = chartEl.getBoundingClientRect();
+            const xPos = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+            const idx = Math.round((xPos / rect.width) * (data.length - 1));
+            const row = data[idx];
+            const snappedX = x(idx);
+            tooltipEl.style.opacity = "1";
+            tooltipEl.style.left = `${snappedX}px`;
+            tooltipEl.style.top = `${event.clientY - rect.top}px`;
+            tooltipEl.innerHTML = `
+              <strong>Rok ${row.year}</strong><br />
+              Vlastní vklady: ${money(row.contributed)}<br />
+              Hodnota: ${money(row.portfolio)}<br />
+              Zhodnocení: ${money(row.gain)}
+              ${
+                compareSavings
+                  ? `<br />Spořicí účet: ${money(row.savings)}<br />Rozdíl: ${money(row.investVsSavingsDiff)}`
+                  : ""
+              }
+              ${
+                compareInflation
+                  ? `<br />Reálná hodnota investic: ${money(row.realPortfolio)}${
+                      compareSavings ? `<br />Reálná hodnota spořícího účtu: ${money(row.realSavings)}` : ""
+                    }`
+                  : ""
+              }
+            `;
+            if (hoverLine) {
+              hoverLine.setAttribute("x1", String(snappedX));
+              hoverLine.setAttribute("x2", String(snappedX));
+              hoverLine.setAttribute("opacity", "1");
+            }
+          };
+
+          const hideTooltip = () => {
+            tooltipEl.style.opacity = "0";
+            if (hoverLine) hoverLine.setAttribute("opacity", "0");
+          };
+
+          chartEl.onmousemove = showTooltip;
+          chartEl.onmouseleave = hideTooltip;
+          chartEl.ontouchmove = (e) => {
+            if (e.touches && e.touches[0]) showTooltip(e.touches[0]);
+          };
+          chartEl.ontouchend = hideTooltip;
+        };
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          toggleSimpleSavingsUI();
+          toggleSimpleInflationUI();
+          const payload = {
+            type: document.getElementById("simple-type").value,
+            amount: parseAmount(amountInput.value),
+            feePct: Number(feeInput.value),
+            returnRate: Number(returnRateInput.value),
+            years: Number(yearsInput.value),
+            compareSavings: compareSavingsInput.checked,
+            savingsRate: Number(savingsRateInput.value || 0),
+            compareInflation: compareInflationInput.checked,
+            inflationRate: Number(inflationRateInput.value || 0)
+          };
+          const data = calculateSimple(payload);
+          drawSummary(data);
+          drawInsight(data, payload);
+          drawTable(data);
+          drawChart(data);
+        });
+
+        compareSavingsInput.addEventListener("change", () => {
+          toggleSimpleSavingsUI();
+          form.dispatchEvent(new Event("submit"));
+        });
+        compareInflationInput.addEventListener("change", () => {
+          toggleSimpleInflationUI();
+          form.dispatchEvent(new Event("submit"));
+        });
+        typeInput.addEventListener("change", () => {
+          applyAmountDefaultByType();
+          form.dispatchEvent(new Event("submit"));
+        });
+
+        toggleSimpleSavingsUI();
+        toggleSimpleInflationUI();
+        applyAmountDefaultByType();
+        form.dispatchEvent(new Event("submit"));
+      }
+
+      function calculateAdvanced({
+        principal,
+        mortgageRate,
+        mortgageYears,
+        lumpSum,
+        prepayMode,
+        returnRate,
+        feePct,
+        monthlyInvest
+      }) {
+        const months = mortgageYears * 12;
+        const rm = mortgageRate / 100 / 12;
+        const ri = Math.pow(1 + returnRate / 100, 1 / 12) - 1;
+        const feeRate = feePct / 100;
+        const paymentInvest = annuityPayment(principal, rm, months);
+        const data = [];
+
+        const reducedPrincipal = Math.max(0, principal - lumpSum);
+        const paymentPrepay =
+          prepayMode === "lowerPayment" ? annuityPayment(reducedPrincipal, rm, months) : paymentInvest;
+
+        let balancePrepay = reducedPrincipal;
+        let balanceInvest = principal;
+        let investPrepay = 0;
+        let investInvest = 0;
+        let interestPrepay = 0;
+        let interestInvest = 0;
+        let investFeesPrepay = 0;
+        let investFeesInvest = 0;
+        let payoffMonthPrepay = balancePrepay === 0 ? 0 : null;
+        let payoffMonthInvest = null;
+
+        const overflowPrepay = Math.max(0, lumpSum - principal);
+        if (overflowPrepay > 0) {
+          const fee = overflowPrepay * feeRate;
+          investFeesPrepay += fee;
+          investPrepay += overflowPrepay - fee;
+        }
+        if (lumpSum > 0) {
+          const fee = lumpSum * feeRate;
+          investFeesInvest += fee;
+          investInvest += lumpSum - fee;
+        }
+
+        const addInvestment = (gross, state) => {
+          if (gross <= 0) return state;
+          const fee = gross * feeRate;
+          const net = gross - fee;
+          state += net;
+          return state;
+        };
+
+        for (let month = 1; month <= months; month++) {
+          if (balancePrepay > 0) {
+            const interest = balancePrepay * rm;
+            const maxToMortgage = balancePrepay + interest;
+            const paidToMortgage = Math.min(paymentPrepay, maxToMortgage);
+            const principalPart = paidToMortgage - interest;
+            balancePrepay = Math.max(0, balancePrepay - principalPart);
+            interestPrepay += interest;
+            if (balancePrepay === 0 && payoffMonthPrepay === null) payoffMonthPrepay = month;
+            const leftover = paymentPrepay - paidToMortgage;
+            const paymentSaving = Math.max(0, paymentInvest - paymentPrepay);
+            const toInvest = monthlyInvest + Math.max(0, leftover) + paymentSaving;
+            investPrepay = addInvestment(toInvest, investPrepay);
+            investFeesPrepay += toInvest * feeRate;
+          } else {
+            const toInvest = monthlyInvest + paymentInvest;
+            investPrepay = addInvestment(toInvest, investPrepay);
+            investFeesPrepay += toInvest * feeRate;
+          }
+          investPrepay *= 1 + ri;
+
+          if (balanceInvest > 0) {
+            const interest = balanceInvest * rm;
+            const maxToMortgage = balanceInvest + interest;
+            const paidToMortgage = Math.min(paymentInvest, maxToMortgage);
+            const principalPart = paidToMortgage - interest;
+            balanceInvest = Math.max(0, balanceInvest - principalPart);
+            interestInvest += interest;
+            if (balanceInvest === 0 && payoffMonthInvest === null) payoffMonthInvest = month;
+            const leftoverFromMortgage = paymentInvest - paidToMortgage;
+            const toInvest = monthlyInvest + Math.max(0, leftoverFromMortgage);
+            investInvest = addInvestment(toInvest, investInvest);
+            investFeesInvest += toInvest * feeRate;
+          } else {
+            const toInvest = monthlyInvest + paymentInvest;
+            investInvest = addInvestment(toInvest, investInvest);
+            investFeesInvest += toInvest * feeRate;
+          }
+          investInvest *= 1 + ri;
+
+          if (month % 12 === 0) {
+            const year = month / 12;
+            const netPrepay = investPrepay - balancePrepay;
+            const netInvest = investInvest - balanceInvest;
+            data.push({
+              year,
+              balancePrepay,
+              balanceInvest,
+              investPrepay,
+              investInvest,
+              netPrepay,
+              netInvest,
+              interestPrepay,
+              interestInvest,
+              investFeesPrepay,
+              investFeesInvest
+            });
+          }
+        }
+
+        if (payoffMonthPrepay === null) payoffMonthPrepay = months;
+        if (payoffMonthInvest === null) payoffMonthInvest = months;
+        return { paymentInvest, paymentPrepay, data, payoffMonthPrepay, payoffMonthInvest };
+      }
+
+      function setupAdvancedCalculator() {
+        const form = document.getElementById("advanced-form");
+        const principalInput = document.getElementById("adv-principal");
+        const principalRange = document.getElementById("adv-principal-range");
+        const mortgageRateInput = document.getElementById("adv-mortgageRate");
+        const mortgageRateRange = document.getElementById("adv-mortgageRate-range");
+        const yearsInput = document.getElementById("adv-years");
+        const yearsRange = document.getElementById("adv-years-range");
+        const lumpInput = document.getElementById("adv-lumpSum");
+        const lumpRange = document.getElementById("adv-lumpSum-range");
+        const returnRateInput = document.getElementById("adv-returnRate");
+        const returnRateRange = document.getElementById("adv-returnRate-range");
+        const feeInput = document.getElementById("adv-fee");
+        const feeRange = document.getElementById("adv-fee-range");
+        const monthlyInvestInput = document.getElementById("adv-monthlyInvest");
+        const monthlyInvestRange = document.getElementById("adv-monthlyInvest-range");
+        const showPrepayMortgageInput = document.getElementById("adv-showPrepayMortgage");
+        const prepayLegendEl = document.getElementById("adv-prepay-legend");
+
+        const rowsEl = document.getElementById("advanced-rows");
+        const cardsEl = document.getElementById("advanced-cards");
+        const summaryEl = document.getElementById("advanced-summary");
+        const insightEl = document.getElementById("advanced-insight");
+        const chartEl = document.getElementById("advanced-chart");
+        const tooltipEl = document.getElementById("advanced-tooltip");
+
+        bindAmountFormatting(principalInput);
+        bindAmountFormatting(lumpInput);
+        bindAmountFormatting(monthlyInvestInput);
+
+        const bindNumberRangePair = (input, range, decimals = 1) => {
+          range.addEventListener("input", () => {
+            input.value = Number(range.value).toFixed(decimals).replace(/\.0$/, "");
+            form.dispatchEvent(new Event("submit"));
+          });
+          input.addEventListener("input", () => {
+            const n = Number(input.value);
+            if (!Number.isNaN(n)) {
+              const min = Number(range.min);
+              const max = Number(range.max);
+              const clamped = Math.max(min, Math.min(max, n));
+              range.value = String(clamped);
+            }
+          });
+        };
+
+        const bindAmountRangePair = (input, range) => {
+          range.addEventListener("input", () => {
+            input.value = formatAmount(range.value);
+            form.dispatchEvent(new Event("submit"));
+          });
+          input.addEventListener("input", () => {
+            const n = parseAmount(input.value);
+            const min = Number(range.min);
+            const max = Number(range.max);
+            const clamped = Math.max(min, Math.min(max, n || min));
+            range.value = String(clamped);
+          });
+        };
+
+        bindAmountRangePair(principalInput, principalRange);
+        bindAmountRangePair(lumpInput, lumpRange);
+        bindAmountRangePair(monthlyInvestInput, monthlyInvestRange);
+        bindNumberRangePair(mortgageRateInput, mortgageRateRange, 1);
+        bindNumberRangePair(yearsInput, yearsRange, 0);
+        bindNumberRangePair(returnRateInput, returnRateRange, 1);
+        bindNumberRangePair(feeInput, feeRange, 1);
+
+        const togglePrepayLegend = () => {
+          prepayLegendEl.classList.toggle("hidden", !showPrepayMortgageInput.checked);
+        };
+
+        const drawSummary = ({ paymentInvest, paymentPrepay, data, payoffMonthPrepay, payoffMonthInvest }, payload) => {
+          const last = data[data.length - 1];
+          const diff = last.netInvest - last.netPrepay;
+          const hit = data.find((r) => r.investInvest >= r.balanceInvest);
+          const better = diff >= 0 ? "investování jednorázové částky" : "okamžité umoření hypotéky";
+          const rateHint =
+            payload.returnRate > payload.mortgageRate
+              ? "Očekávaný výnos investice je vyšší než sazba hypotéky."
+              : "Očekávaný výnos investice je nižší nebo stejný jako sazba hypotéky.";
+          const modeLabel =
+            payload.prepayMode === "lowerPayment"
+              ? "Po mimořádné splátce: snížení měsíční splátky"
+              : "Po mimořádné splátce: zkrácení doby splácení";
+          summaryEl.innerHTML = `
+            <div class="summary-item"><div class="k">Lepší varianta</div><div class="v">${better}</div></div>
+            <div class="summary-item"><div class="k">Rozdíl strategií</div><div class="v">${money(Math.abs(diff))}</div></div>
+            <div class="summary-item"><div class="k">Čistá pozice - umoření</div><div class="v">${money(last.netPrepay)}</div></div>
+            <div class="summary-item"><div class="k">Čistá pozice - investice</div><div class="v">${money(last.netInvest)}</div></div>
+          `;
+          insightEl.innerHTML = `
+            Rozdíl na konci období je <strong>${money(Math.abs(diff))}</strong>.
+            ${rateHint} ${modeLabel}. Splátka při variantě investice: <strong>${money(paymentInvest)}</strong>,
+            při umoření: <strong>${money(paymentPrepay)}</strong>.
+            Doba doplacení hypotéky je ${ (payoffMonthPrepay / 12).toFixed(1)} roku (umoření) vs. ${(payoffMonthInvest / 12).toFixed(1)} roku (investice).
+            ${hit ? `Investice pokryje zůstatek hypotéky přibližně v roce <strong>${hit.year}</strong>.` : "Investice v horizontu zatím nepokryje celý zůstatek hypotéky."}
+          `;
+        };
+
+        const drawTable = (data) => {
+          rowsEl.innerHTML = data
+            .map(
+              (r) => `
+              <tr>
+                <td>${r.year}</td>
+                <td>${money(r.netPrepay)}</td>
+                <td>${money(r.netInvest)}</td>
+                <td>${money(r.netInvest - r.netPrepay)}</td>
+              </tr>`
+            )
+            .join("");
+
+          cardsEl.innerHTML = data
+            .map(
+              (r) => `
+              <article class="mobile-row">
+                <h4>Rok ${r.year}</h4>
+                <div class="mobile-grid">
+                  <div><div class="mobile-k">Čistá pozice (umoření)</div><div class="mobile-v">${money(r.netPrepay)}</div></div>
+                  <div><div class="mobile-k">Čistá pozice (investice)</div><div class="mobile-v">${money(r.netInvest)}</div></div>
+                  <div><div class="mobile-k">Rozdíl</div><div class="mobile-v">${money(r.netInvest - r.netPrepay)}</div></div>
+                </div>
+              </article>`
+            )
+            .join("");
+        };
+
+        const drawChart = (data) => {
+          const showPrepayMortgage = showPrepayMortgageInput.checked;
+          const lines = [
+            { key: "investInvest", color: "#2f8fa1", width: 3 },
+            { key: "balanceInvest", color: "#79bcc8", width: 3 }
+          ];
+          if (showPrepayMortgage) {
+            lines.push({ key: "balancePrepay", color: "#d73a3a", width: 2 });
+          }
+
+          drawLineChart({
+            svg: chartEl,
+            data,
+            lines,
+            tooltipEl,
+            formatter: (row) => `
+              <strong>Rok ${row.year}</strong><br />
+              Hodnota investice: ${money(row.investInvest)}<br />
+              Zůstatek hypotéky: ${money(row.balanceInvest)}<br />
+              ${showPrepayMortgage ? `Zůstatek hypo po mimořádné splátce: ${money(row.balancePrepay)}<br />` : ""}
+              Rozdíl (investice - zůstatek): ${money(row.investInvest - row.balanceInvest)}
+            `,
+            footerLabel: `Rok ${data.length}`,
+            yAxisLabel: "Hodnota (Kč)"
+          });
+        };
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          togglePrepayLegend();
+          const payload = {
+            principal: parseAmount(principalInput.value),
+            mortgageRate: Number(mortgageRateInput.value),
+            mortgageYears: Number(yearsInput.value),
+            lumpSum: parseAmount(lumpInput.value),
+            prepayMode: document.getElementById("adv-prepayMode").value,
+            returnRate: Number(returnRateInput.value),
+            feePct: Number(feeInput.value),
+            monthlyInvest: parseAmount(monthlyInvestInput.value)
+          };
+
+          const result = calculateAdvanced(payload);
+          drawSummary(result, payload);
+          drawTable(result.data);
+          drawChart(result.data);
+        });
+
+        showPrepayMortgageInput.addEventListener("change", () => {
+          togglePrepayLegend();
+          form.dispatchEvent(new Event("submit"));
+        });
+
+        togglePrepayLegend();
+        principalInput.dispatchEvent(new Event("input"));
+        lumpInput.dispatchEvent(new Event("input"));
+        monthlyInvestInput.dispatchEvent(new Event("input"));
+        mortgageRateInput.dispatchEvent(new Event("input"));
+        yearsInput.dispatchEvent(new Event("input"));
+        returnRateInput.dispatchEvent(new Event("input"));
+        feeInput.dispatchEvent(new Event("input"));
+        form.dispatchEvent(new Event("submit"));
+      }
+
+      function calculateGoal({
+        targetToday,
+        years,
+        returnRate,
+        initialDeposit,
+        useInflation,
+        inflationRate
+      }) {
+        const months = years * 12;
+        const monthlyRate = Math.pow(1 + returnRate / 100, 1 / 12) - 1;
+        const inflationAnnualFactor = useInflation ? 1 + inflationRate / 100 : 1;
+        const regularFeeRate = 0.03;
+        const netFactor = Math.max(0, 1 - regularFeeRate);
+        const targetAtHorizon = targetToday * Math.pow(inflationAnnualFactor, years);
+
+        const initialFee = initialDeposit * regularFeeRate;
+        const initialNet = initialDeposit - initialFee;
+        const initialFutureValue = initialNet * Math.pow(1 + monthlyRate, months);
+        let requiredMonthlyNet = 0;
+        if (months > 0) {
+          if (Math.abs(monthlyRate) < 1e-12) {
+            requiredMonthlyNet = Math.max(0, (targetAtHorizon - initialFutureValue) / months);
+          } else {
+            const dueFactor = (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate));
+            requiredMonthlyNet = Math.max(0, (targetAtHorizon - initialFutureValue) / dueFactor);
+          }
+        }
+        const requiredMonthlyGross = netFactor > 0 ? requiredMonthlyNet / netFactor : 0;
+
+        const requiredLumpSumNet = months > 0 ? targetAtHorizon / Math.pow(1 + monthlyRate, months) : targetAtHorizon;
+        const requiredLumpSum = requiredLumpSumNet / netFactor;
+
+        const data = [];
+        let balance = initialNet;
+        let annualFees = initialFee;
+        let cumulativeNetContributed = initialNet;
+        for (let month = 1; month <= months; month++) {
+          const grossDeposit = requiredMonthlyGross;
+          const fee = grossDeposit * regularFeeRate;
+          const netDeposit = grossDeposit - fee;
+          balance += netDeposit;
+          annualFees += fee;
+          cumulativeNetContributed += netDeposit;
+          balance *= 1 + monthlyRate;
+
+          if (month % 12 === 0) {
+            const year = month / 12;
+            const requiredByYear = targetToday * Math.pow(inflationAnnualFactor, year);
+            data.push({
+              year,
+              balance,
+              requiredByYear,
+              diff: balance - requiredByYear,
+              annualFees,
+              gainValue: balance - cumulativeNetContributed
+            });
+            annualFees = 0;
+          }
+        }
+
+        return {
+          targetAtHorizon,
+          requiredMonthlyGross,
+          requiredMonthlyNet,
+          requiredLumpSum,
+          data
+        };
+      }
+
+      function setupGoalCalculator() {
+        const form = document.getElementById("goal-form");
+        const targetInput = document.getElementById("goal-target");
+        const targetRange = document.getElementById("goal-target-range");
+        const yearsInput = document.getElementById("goal-years");
+        const yearsRange = document.getElementById("goal-years-range");
+        const returnInput = document.getElementById("goal-returnRate");
+        const returnRange = document.getElementById("goal-returnRate-range");
+        const initialInput = document.getElementById("goal-initial");
+        const initialRange = document.getElementById("goal-initial-range");
+        const useInflationInput = document.getElementById("goal-useInflation");
+        const inflationWrapEl = document.getElementById("goal-inflation-wrap");
+        const inflationInput = document.getElementById("goal-inflationRate");
+        const inflationRange = document.getElementById("goal-inflationRate-range");
+
+        const summaryEl = document.getElementById("goal-summary");
+        const rowsEl = document.getElementById("goal-rows");
+        const cardsEl = document.getElementById("goal-cards");
+        const chartEl = document.getElementById("goal-chart");
+        const tooltipEl = document.getElementById("goal-tooltip");
+
+        bindAmountFormatting(targetInput);
+        bindAmountFormatting(initialInput, true);
+
+        const bindNumberRangePair = (input, range, decimals = 1) => {
+          range.addEventListener("input", () => {
+            input.value = Number(range.value).toFixed(decimals).replace(/\.0$/, "");
+            form.dispatchEvent(new Event("submit"));
+          });
+          input.addEventListener("input", () => {
+            const n = Number(input.value);
+            if (!Number.isNaN(n)) {
+              const min = Number(range.min);
+              const max = Number(range.max);
+              const clamped = Math.max(min, Math.min(max, n));
+              range.value = String(clamped);
+            }
+          });
+        };
+
+        const bindAmountRangePair = (input, range, keepZero = false) => {
+          range.addEventListener("input", () => {
+            input.value = formatAmount(range.value, keepZero);
+            form.dispatchEvent(new Event("submit"));
+          });
+          input.addEventListener("input", () => {
+            const n = parseAmount(input.value);
+            const min = Number(range.min);
+            const max = Number(range.max);
+            const clamped = Math.max(min, Math.min(max, n || min));
+            range.value = String(clamped);
+          });
+        };
+
+        bindAmountRangePair(targetInput, targetRange);
+        bindAmountRangePair(initialInput, initialRange, true);
+        bindNumberRangePair(yearsInput, yearsRange, 0);
+        bindNumberRangePair(returnInput, returnRange, 1);
+        bindNumberRangePair(inflationInput, inflationRange, 1);
+
+        const toggleInflation = () => {
+          inflationWrapEl.classList.toggle("hidden", !useInflationInput.checked);
+        };
+
+        const drawSummary = (result, payload) => {
+          const last = result.data[result.data.length - 1];
+          summaryEl.innerHTML = `
+            <div class="summary-item"><div class="k">Cílová částka v horizontu</div><div class="v">${money(result.targetAtHorizon)}</div></div>
+            <div class="summary-item"><div class="k">Potřebná měsíční investice (hrubá)</div><div class="v">${money(result.requiredMonthlyGross)}</div></div>
+            <div class="summary-item"><div class="k">Jednorázově dnes (alternativa)</div><div class="v">${money(result.requiredLumpSum)}</div></div>
+            <div class="summary-item"><div class="k">Inflace započtena</div><div class="v">${payload.useInflation ? pct(payload.inflationRate) : "Ne"}</div></div>
+            <div class="summary-item"><div class="k">Poplatek započten</div><div class="v">Ano</div></div>
+          `;
+        };
+
+        const drawTable = (data) => {
+          rowsEl.innerHTML = data
+            .map(
+              (r) => {
+                const fulfillmentPct = r.requiredByYear > 0 ? (r.balance / r.requiredByYear) * 100 : 0;
+                return `
+              <tr>
+                <td>${r.year}</td>
+                <td>${money(r.requiredByYear)}</td>
+                <td>${money(r.balance)}</td>
+                <td>${money(r.gainValue)}</td>
+                <td>${pct(fulfillmentPct)}</td>
+              </tr>`;
+              }
+            )
+            .join("");
+
+          cardsEl.innerHTML = data
+            .map(
+              (r) => {
+                const fulfillmentPct = r.requiredByYear > 0 ? (r.balance / r.requiredByYear) * 100 : 0;
+                return `
+              <article class="mobile-row">
+                <h4>Rok ${r.year}</h4>
+                <div class="mobile-grid">
+                  <div><div class="mobile-k">Potřebná částka</div><div class="mobile-v">${money(r.requiredByYear)}</div></div>
+                  <div><div class="mobile-k">Hodnota portfolia</div><div class="mobile-v">${money(r.balance)}</div></div>
+                  <div><div class="mobile-k">Hodnota zhodnocení</div><div class="mobile-v">${money(r.gainValue)}</div></div>
+                  <div><div class="mobile-k">Plnění cíle</div><div class="mobile-v">${pct(fulfillmentPct)}</div></div>
+                </div>
+              </article>`;
+              }
+            )
+            .join("");
+        };
+
+        const drawChart = (data) => {
+          drawLineChart({
+            svg: chartEl,
+            data,
+            lines: [
+              { key: "balance", color: "#2f8fa1", width: 3 }
+            ],
+            tooltipEl,
+            formatter: (row) => `
+              <strong>Rok ${row.year}</strong><br />
+              Potřebná částka: ${money(row.requiredByYear)}<br />
+              Hodnota portfolia: ${money(row.balance)}<br />
+              Plnění cíle: ${pct(row.requiredByYear > 0 ? (row.balance / row.requiredByYear) * 100 : 0)}<br />
+              ${row.requiredByYear - row.balance > 0 ? `Chybí: ${money(row.requiredByYear - row.balance)}` : `Přebytek: ${money(Math.abs(row.requiredByYear - row.balance))}`}
+            `,
+            footerLabel: `Rok ${data.length}`,
+            yAxisLabel: "Hodnota (Kč)"
+          });
+        };
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          toggleInflation();
+          const payload = {
+            targetToday: parseAmount(targetInput.value),
+            years: Number(yearsInput.value),
+            returnRate: Number(returnInput.value),
+            initialDeposit: parseAmount(initialInput.value),
+            useInflation: useInflationInput.checked,
+            inflationRate: Number(inflationInput.value || 0)
+          };
+
+          const result = calculateGoal(payload);
+          drawSummary(result, payload);
+          drawTable(result.data);
+          drawChart(result.data);
+        });
+
+        useInflationInput.addEventListener("change", () => {
+          toggleInflation();
+          form.dispatchEvent(new Event("submit"));
+        });
+
+        toggleInflation();
+        targetInput.dispatchEvent(new Event("input"));
+        initialInput.dispatchEvent(new Event("input"));
+        yearsInput.dispatchEvent(new Event("input"));
+        returnInput.dispatchEvent(new Event("input"));
+        inflationInput.dispatchEvent(new Event("input"));
+        form.dispatchEvent(new Event("submit"));
+      }
+
+      setupModeSwitch();
+      setupSimpleCalculator();
+      setupAdvancedCalculator();
+      setupGoalCalculator();
+    </script>
+  </body>
+</html>
