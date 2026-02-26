@@ -65,7 +65,7 @@
 
       .flow-nav {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 10px;
         margin-bottom: 14px;
       }
@@ -569,7 +569,8 @@
       </div>
       <div class="flow-nav">
         <button type="button" class="flow-step active" data-flow-mode="simple"><span class="n">📈</span>Chci spočítat hodnotu investice</button>
-        <button type="button" class="flow-step nowrap" data-flow-mode="goal"><span class="n">🎯</span>Mám cíl: kolik dávat stranou?</button>
+        <button type="button" class="flow-step" data-flow-mode="goal"><span class="n">🎯</span>Mám cíl: kolik dávat stranou?</button>
+        <button type="button" class="flow-step" data-flow-mode="smart"><span class="n">💡</span>Jak na hypotéce nepřeplatit</button>
         <button type="button" class="flow-step" data-flow-mode="advanced"><span class="n">🏠</span>Splacení hypotéky vs. investice</button>
         <button type="button" class="flow-step" data-flow-mode="pension"><span class="n">🧓</span>Penze</button>
       </div>
@@ -898,6 +899,110 @@
         </div>
       </div>
 
+      <div id="mode-smart" class="calc-mode">
+        <div class="grid">
+          <section class="card">
+            <form id="smart-form">
+              <div class="form-row">
+                <label for="smart-loan">Výše úvěru (Kč)</label>
+                <input id="smart-loan" type="text" inputmode="numeric" value="3000000" required />
+                <div class="slider-row">
+                  <input id="smart-loan-range" type="range" min="0" max="10000000" step="100000" value="3000000" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="smart-rate">Úroková sazba (% p.a.)</label>
+                <input id="smart-rate" type="number" min="0" max="7" step="0.1" value="4.5" required />
+                <div class="slider-row">
+                  <input id="smart-rate-range" type="range" min="0" max="7" step="0.1" value="4.5" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="smart-years">Splatnost úvěru (roky)</label>
+                <input id="smart-years" type="number" min="1" max="30" step="1" value="30" required />
+                <div class="slider-row">
+                  <input id="smart-years-range" type="range" min="1" max="30" step="1" value="30" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="smart-monthlyInvest">Pravidelná investice (Kč)</label>
+                <input id="smart-monthlyInvest" type="text" inputmode="numeric" value="5000" required />
+                <div class="slider-row">
+                  <input id="smart-monthlyInvest-range" type="range" min="0" max="50000" step="1000" value="5000" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label for="smart-return">Očekávaný výnos investice (% p.a.)</label>
+                <input id="smart-return" type="number" min="0" max="20" step="0.1" value="7" required />
+                <div class="slider-row">
+                  <input id="smart-return-range" type="range" min="0" max="20" step="0.5" value="7" />
+                </div>
+              </div>
+
+              <details class="advanced-options">
+                <summary>Rozšířené nastavení</summary>
+                <div class="form-row" style="margin-top:10px">
+                  <label for="smart-fee-mode">Typ poplatku</label>
+                  <select id="smart-fee-mode">
+                    <option value="ongoing" selected>Průběžný</option>
+                    <option value="express">Expresní</option>
+                    <option value="standard">Běžný</option>
+                  </select>
+                </div>
+
+                <div class="form-row">
+                  <label for="smart-fee-pct">Výše poplatku (%)</label>
+                  <input id="smart-fee-pct" type="number" min="0" max="3" step="0.1" value="3" />
+                  <div class="slider-row">
+                    <input id="smart-fee-pct-range" type="range" min="0" max="3" step="0.5" value="3" />
+                  </div>
+                </div>
+              </details>
+
+              <button type="submit">Spočítat</button>
+              <p class="disclaimer">Disclaimer: Výsledky jsou orientační, nezahrnují daně ani změny legislativy a výnos není garantovaný.</p>
+            </form>
+          </section>
+
+          <section class="card">
+            <div class="summary" id="smart-summary"></div>
+            <div class="insight" id="smart-insight"></div>
+
+            <div class="chart">
+              <div class="chart-area">
+                <svg id="smart-chart" viewBox="0 0 900 300" preserveAspectRatio="none"></svg>
+                <div id="smart-tooltip" class="chart-tooltip"></div>
+              </div>
+              <div class="legend">
+                <span><i class="swatch" style="background:#2f8fa1"></i>Hodnota investice</span>
+                <span><i class="swatch" style="background:#79bcc8"></i>Zůstatek hypotéky</span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rok</th>
+                    <th>Zůstatek hypotéky</th>
+                    <th>Hodnota investice</th>
+                    <th>Rozdíl (investice - hypotéka)</th>
+                    <th>Zaplacený úrok (kumulativně)</th>
+                    <th>Poplatky z investice (kumulativně)</th>
+                  </tr>
+                </thead>
+                <tbody id="smart-rows"></tbody>
+              </table>
+            </div>
+            <div id="smart-cards" class="mobile-cards"></div>
+          </section>
+        </div>
+      </div>
+
       <div id="mode-pension" class="calc-mode">
         <div class="grid">
           <section class="card">
@@ -1071,6 +1176,7 @@
           simple: document.getElementById("mode-simple"),
           advanced: document.getElementById("mode-advanced"),
           goal: document.getElementById("mode-goal"),
+          smart: document.getElementById("mode-smart"),
           pension: document.getElementById("mode-pension")
         };
 
@@ -1652,6 +1758,259 @@
         toggleSimpleSavingsUI();
         toggleSimpleInflationUI();
         applyAmountDefaultByType();
+        form.dispatchEvent(new Event("submit"));
+      }
+
+      function calculateSmartMortgage({
+        loan,
+        mortgageRate,
+        years,
+        monthlyInvest,
+        returnRate,
+        feeMode,
+        feePct
+      }) {
+        const safeYears = Math.max(1, years);
+        const months = safeYears * 12;
+        const rm = mortgageRate / 100 / 12;
+        const ri = Math.pow(1 + returnRate / 100, 1 / 12) - 1;
+        const feeRate = feePct / 100;
+        const payment = annuityPayment(loan, rm, months);
+
+        let balance = loan;
+        let investment = 0;
+        let cumulativeInterest = 0;
+        let cumulativeFees = 0;
+        let cumulativeMortgagePaid = 0;
+        let entryFeeBudget = monthlyInvest * 12 * 15 * feeRate;
+        const data = [];
+        let payoffInfo = null;
+
+        for (let month = 1; month <= months; month++) {
+          if (balance > 0) {
+            const interest = balance * rm;
+            const paidToMortgage = Math.min(payment, balance + interest);
+            const principalPart = paidToMortgage - interest;
+            balance = Math.max(0, balance - principalPart);
+            cumulativeInterest += interest;
+            cumulativeMortgagePaid += paidToMortgage;
+          }
+
+          const gross = Math.max(0, monthlyInvest);
+          let fee = 0;
+
+          if (feeMode === "ongoing") {
+            fee = gross * feeRate;
+          } else if (feeMode === "express") {
+            fee = Math.min(gross, Math.max(0, entryFeeBudget));
+            entryFeeBudget -= fee;
+          } else if (feeMode === "standard") {
+            fee = Math.min(gross * 0.75, Math.max(0, entryFeeBudget));
+            entryFeeBudget -= fee;
+          }
+
+          const net = Math.max(0, gross - fee);
+          cumulativeFees += fee;
+          investment += net;
+          investment *= 1 + ri;
+
+          if (!payoffInfo && investment >= balance) {
+            // If mortgage is paid off immediately at the crossover month, compare with
+            // what would still be paid in regular installments until the end.
+            let remainingPayments = 0;
+            let tmpBalance = balance;
+            for (let m = month + 1; m <= months; m++) {
+              if (tmpBalance <= 0) break;
+              const i = tmpBalance * rm;
+              const paid = Math.min(payment, tmpBalance + i);
+              const principalPart = paid - i;
+              remainingPayments += paid;
+              tmpBalance = Math.max(0, tmpBalance - principalPart);
+            }
+            payoffInfo = {
+              month,
+              year: Math.ceil(month / 12),
+              balanceAtCross: balance,
+              remainingPaymentsIfContinue: remainingPayments,
+              savedByImmediatePayoff: Math.max(0, remainingPayments - balance)
+            };
+          }
+
+          if (month % 12 === 0) {
+            const year = month / 12;
+            data.push({
+              year,
+              mortgageBalance: balance,
+              investmentValue: investment,
+              diff: investment - balance,
+              cumulativeInterest,
+              cumulativeFees,
+              cumulativeMortgagePaid
+            });
+          }
+        }
+
+        const payoffYear = data.find((r) => r.investmentValue >= r.mortgageBalance)?.year || null;
+        return { payment, data, payoffYear, payoffInfo, totalMortgagePaid: cumulativeMortgagePaid };
+      }
+
+      function setupSmartCalculator() {
+        const form = document.getElementById("smart-form");
+        const loanInput = document.getElementById("smart-loan");
+        const loanRange = document.getElementById("smart-loan-range");
+        const rateInput = document.getElementById("smart-rate");
+        const rateRange = document.getElementById("smart-rate-range");
+        const yearsInput = document.getElementById("smart-years");
+        const yearsRange = document.getElementById("smart-years-range");
+        const monthlyInvestInput = document.getElementById("smart-monthlyInvest");
+        const monthlyInvestRange = document.getElementById("smart-monthlyInvest-range");
+        const returnInput = document.getElementById("smart-return");
+        const returnRange = document.getElementById("smart-return-range");
+        const feeModeInput = document.getElementById("smart-fee-mode");
+        const feePctInput = document.getElementById("smart-fee-pct");
+        const feePctRange = document.getElementById("smart-fee-pct-range");
+
+        const summaryEl = document.getElementById("smart-summary");
+        const insightEl = document.getElementById("smart-insight");
+        const rowsEl = document.getElementById("smart-rows");
+        const cardsEl = document.getElementById("smart-cards");
+        const chartEl = document.getElementById("smart-chart");
+        const tooltipEl = document.getElementById("smart-tooltip");
+
+        enableAutoRecalc(form);
+        bindAmountFormatting(loanInput, true);
+        bindAmountFormatting(monthlyInvestInput, true);
+
+        const bindNumberRangePair = (input, range, decimals = 1) => {
+          range.addEventListener("input", () => {
+            input.value = Number(range.value).toFixed(decimals).replace(/\.0$/, "");
+            form.dispatchEvent(new Event("submit"));
+          });
+          input.addEventListener("input", () => {
+            const n = Number(input.value);
+            if (!Number.isNaN(n)) {
+              const min = Number(range.min);
+              const max = Number(range.max);
+              const clamped = Math.max(min, Math.min(max, n));
+              range.value = String(clamped);
+            }
+          });
+        };
+
+        const bindAmountRangePair = (input, range, keepZero = false) => {
+          range.addEventListener("input", () => {
+            input.value = formatAmount(range.value, keepZero);
+            form.dispatchEvent(new Event("submit"));
+          });
+          input.addEventListener("input", () => {
+            const n = parseAmount(input.value);
+            const min = Number(range.min);
+            const max = Number(range.max);
+            const clamped = Math.max(min, Math.min(max, n || min));
+            range.value = String(clamped);
+          });
+        };
+
+        bindAmountRangePair(loanInput, loanRange, true);
+        bindAmountRangePair(monthlyInvestInput, monthlyInvestRange, true);
+        bindNumberRangePair(rateInput, rateRange, 1);
+        bindNumberRangePair(yearsInput, yearsRange, 0);
+        bindNumberRangePair(returnInput, returnRange, 1);
+        bindNumberRangePair(feePctInput, feePctRange, 1);
+
+        const drawSummary = (result) => {
+          const last = result.data[result.data.length - 1];
+          summaryEl.innerHTML = `
+            <div class="summary-item"><div class="k">Měsíční splátka hypotéky</div><div class="v">${money(result.payment)}</div></div>
+            <div class="summary-item"><div class="k">Celkem zaplaceno na hypotéce</div><div class="v">${money(result.totalMortgagePaid)}</div></div>
+            <div class="summary-item"><div class="k">Koncová hodnota investice</div><div class="v">${money(last.investmentValue)}</div></div>
+          `;
+          insightEl.innerHTML = `
+            ${
+              result.payoffInfo
+                ? `Investice pokryje zůstatek hypotéky přibližně v roce <strong>${result.payoffInfo.year}</strong>. Při okamžitém doplacení hypotéky z investice v bodě protnutí může ušetřit zhruba <strong>${money(result.payoffInfo.savedByImmediatePayoff)}</strong>.`
+                : "Investice v horizontu zatím nepokryje celý zůstatek hypotéky."
+            }
+          `;
+        };
+
+        const drawTable = (data) => {
+          rowsEl.innerHTML = data
+            .map(
+              (r) => `
+              <tr>
+                <td>${r.year}</td>
+                <td>${money(r.mortgageBalance)}</td>
+                <td>${money(r.investmentValue)}</td>
+                <td>${money(r.diff)}</td>
+                <td>${money(r.cumulativeInterest)}</td>
+                <td>${money(r.cumulativeFees)}</td>
+              </tr>`
+            )
+            .join("");
+
+          cardsEl.innerHTML = data
+            .map(
+              (r) => `
+              <article class="mobile-row">
+                <h4>Rok ${r.year}</h4>
+                <div class="mobile-grid">
+                  <div><div class="mobile-k">Zůstatek hypotéky</div><div class="mobile-v">${money(r.mortgageBalance)}</div></div>
+                  <div><div class="mobile-k">Hodnota investice</div><div class="mobile-v">${money(r.investmentValue)}</div></div>
+                  <div><div class="mobile-k">Rozdíl (investice - hypotéka)</div><div class="mobile-v">${money(r.diff)}</div></div>
+                  <div><div class="mobile-k">Zaplacený úrok (kumulativně)</div><div class="mobile-v">${money(r.cumulativeInterest)}</div></div>
+                  <div><div class="mobile-k">Poplatky z investice (kumulativně)</div><div class="mobile-v">${money(r.cumulativeFees)}</div></div>
+                </div>
+              </article>`
+            )
+            .join("");
+        };
+
+        const drawChart = (data) => {
+          drawLineChart({
+            svg: chartEl,
+            data,
+            lines: [
+              { key: "investmentValue", color: "#2f8fa1", width: 3 },
+              { key: "mortgageBalance", color: "#79bcc8", width: 3 }
+            ],
+            tooltipEl,
+            formatter: (row) => `
+              <strong>Rok ${row.year}</strong><br />
+              Hodnota investice: ${money(row.investmentValue)}<br />
+              Zůstatek hypotéky: ${money(row.mortgageBalance)}<br />
+              Rozdíl: ${money(row.diff)}
+            `,
+            footerLabel: `Rok ${data.length}`,
+            yAxisLabel: "Hodnota (Kč)"
+          });
+        };
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          const payload = {
+            loan: parseAmount(loanInput.value),
+            mortgageRate: Number(rateInput.value || 0),
+            years: Math.max(1, Number(yearsInput.value || 0)),
+            monthlyInvest: parseAmount(monthlyInvestInput.value),
+            returnRate: Number(returnInput.value || 0),
+            feeMode: feeModeInput.value,
+            feePct: Number(feePctInput.value || 0)
+          };
+
+          const result = calculateSmartMortgage(payload);
+          drawSummary(result);
+          drawTable(result.data);
+          drawChart(result.data);
+        });
+
+        loanInput.dispatchEvent(new Event("input"));
+        monthlyInvestInput.dispatchEvent(new Event("input"));
+        rateInput.dispatchEvent(new Event("input"));
+        yearsInput.dispatchEvent(new Event("input"));
+        returnInput.dispatchEvent(new Event("input"));
+        feePctInput.dispatchEvent(new Event("input"));
         form.dispatchEvent(new Event("submit"));
       }
 
@@ -2564,6 +2923,7 @@
 
       setupModeSwitch();
       setupSimpleCalculator();
+      setupSmartCalculator();
       setupAdvancedCalculator();
       setupPensionCalculator();
       setupGoalCalculator();
