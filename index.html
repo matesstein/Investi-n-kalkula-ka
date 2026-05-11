@@ -584,14 +584,33 @@
                 <select id="simple-type" required>
                   <option value="monthly">Měsíční investice</option>
                   <option value="lumpSum">Jednorázová investice</option>
+                  <option value="combined">Jednoráz+měsíční</option>
                 </select>
               </div>
 
-              <div class="form-row">
+              <div id="simple-amount-wrap" class="form-row">
                 <label for="simple-amount">Výše investice (Kč)</label>
                 <input id="simple-amount" type="text" inputmode="numeric" value="5000" required />
                 <div id="simple-amount-range-wrap" class="slider-row">
                   <input id="simple-amount-range" type="range" min="1000" max="25000" step="1000" value="5000" />
+                </div>
+              </div>
+
+              <div id="simple-combined-wrap" class="hidden">
+                <div class="form-row">
+                  <label for="simple-monthly-amount">Měsíční investice (Kč)</label>
+                  <input id="simple-monthly-amount" type="text" inputmode="numeric" value="5000" />
+                  <div class="slider-row">
+                    <input id="simple-monthly-amount-range" type="range" min="1000" max="25000" step="1000" value="5000" />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <label for="simple-lump-amount">Jednorázová investice (Kč)</label>
+                  <input id="simple-lump-amount" type="text" inputmode="numeric" value="100000" />
+                  <div class="slider-row">
+                    <input id="simple-lump-amount-range" type="range" min="0" max="2000000" step="50000" value="100000" />
+                  </div>
                 </div>
               </div>
 
@@ -1310,6 +1329,8 @@
       function calculateSimple({
         type,
         amount,
+        monthlyAmount,
+        lumpSumAmount,
         feePct,
         returnRate,
         years,
@@ -1331,30 +1352,41 @@
         let inflationIndex = 1;
 
         // Poplatek platí pouze investice, spořicí účet používá plný vklad.
-        const applyInvestmentDeposit = () => {
-          const fee = amount * feeRate;
-          const net = amount - fee;
-          contributed += amount;
+        const applyInvestmentDeposit = (depositAmount) => {
+          const fee = depositAmount * feeRate;
+          const net = depositAmount - fee;
+          contributed += depositAmount;
           fees += fee;
           portfolio += net;
           return { fee };
         };
 
-        const applySavingsDeposit = () => {
-          if (compareSavings) savings += amount;
+        const applySavingsDeposit = (depositAmount) => {
+          if (compareSavings) savings += depositAmount;
         };
 
         let annualContribution = 0;
         let annualFees = 0;
 
         for (let month = 1; month <= years * 12; month++) {
-          const shouldDeposit = type === "monthly" || (type === "lumpSum" && month === 1);
-          if (shouldDeposit) {
-            const { fee } = applyInvestmentDeposit();
-            annualContribution += amount;
-            annualFees += fee;
-            applySavingsDeposit();
+          const deposits = [];
+          if (type === "monthly") {
+            deposits.push(amount);
+          } else if (type === "lumpSum" && month === 1) {
+            deposits.push(amount);
+          } else if (type === "combined") {
+            if (month === 1) deposits.push(lumpSumAmount);
+            deposits.push(monthlyAmount);
           }
+
+          deposits
+            .filter((depositAmount) => depositAmount > 0)
+            .forEach((depositAmount) => {
+              const { fee } = applyInvestmentDeposit(depositAmount);
+              annualContribution += depositAmount;
+              annualFees += fee;
+              applySavingsDeposit(depositAmount);
+            });
 
           portfolio *= 1 + monthlyRate;
 
@@ -1399,9 +1431,15 @@
       function setupSimpleCalculator() {
         const form = document.getElementById("simple-form");
         const typeInput = document.getElementById("simple-type");
+        const amountWrap = document.getElementById("simple-amount-wrap");
         const amountInput = document.getElementById("simple-amount");
         const amountRangeWrap = document.getElementById("simple-amount-range-wrap");
         const amountRange = document.getElementById("simple-amount-range");
+        const combinedWrap = document.getElementById("simple-combined-wrap");
+        const monthlyAmountInput = document.getElementById("simple-monthly-amount");
+        const monthlyAmountRange = document.getElementById("simple-monthly-amount-range");
+        const lumpAmountInput = document.getElementById("simple-lump-amount");
+        const lumpAmountRange = document.getElementById("simple-lump-amount-range");
         const feeInput = document.getElementById("simple-fee");
         const feeRange = document.getElementById("simple-fee-range");
         const returnRateInput = document.getElementById("simple-returnRate");
@@ -1430,6 +1468,8 @@
         enableAutoRecalc(form);
 
         bindAmountFormatting(amountInput, true);
+        bindAmountFormatting(monthlyAmountInput, true);
+        bindAmountFormatting(lumpAmountInput, true);
 
         const syncAmountFieldToRange = () => {
           const value = parseAmount(amountInput.value);
@@ -1474,15 +1514,35 @@
         bindNumberRangePair(savingsRateInput, savingsRateRange, 1);
         bindNumberRangePair(inflationRateInput, inflationRateRange, 1);
 
-        amountRange.addEventListener("input", () => {
-          amountInput.value = formatAmount(amountRange.value);
-          form.dispatchEvent(new Event("submit"));
-        });
-        amountInput.addEventListener("input", () => {
-          syncAmountFieldToRange();
-        });
+        const bindAmountRangePair = (input, range, keepZero = false) => {
+          range.addEventListener("input", () => {
+            input.value = formatAmount(range.value, keepZero);
+            form.dispatchEvent(new Event("submit"));
+          });
+          input.addEventListener("input", () => {
+            const n = parseAmount(input.value);
+            const min = Number(range.min);
+            const max = Number(range.max);
+            const clamped = Math.max(min, Math.min(max, n || min));
+            range.value = String(clamped);
+          });
+        };
+
+        bindAmountRangePair(amountInput, amountRange, true);
+        bindAmountRangePair(monthlyAmountInput, monthlyAmountRange, true);
+        bindAmountRangePair(lumpAmountInput, lumpAmountRange, true);
 
         const applyAmountDefaultByType = () => {
+          const isCombined = typeInput.value === "combined";
+          amountWrap.classList.toggle("hidden", isCombined);
+          combinedWrap.classList.toggle("hidden", !isCombined);
+          if (isCombined) {
+            monthlyAmountInput.value = formatAmount("5000", true);
+            lumpAmountInput.value = formatAmount("100000", true);
+            monthlyAmountRange.value = "5000";
+            lumpAmountRange.value = "100000";
+            return;
+          }
           const defaultAmount = typeInput.value === "lumpSum" ? 100000 : 5000;
           configureAmountRangeByType();
           amountInput.value = formatAmount(String(defaultAmount));
@@ -1727,6 +1787,8 @@
           const payload = {
             type: document.getElementById("simple-type").value,
             amount: parseAmount(amountInput.value),
+            monthlyAmount: parseAmount(monthlyAmountInput.value),
+            lumpSumAmount: parseAmount(lumpAmountInput.value),
             feePct: Number(feeInput.value),
             returnRate: Number(returnRateInput.value),
             years: Number(yearsInput.value),
